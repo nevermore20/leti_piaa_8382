@@ -1,0 +1,14 @@
+https://www.onlinegdb.com/online_c++_compiler
+- ссылка на онлайн компилятор
+
+Тесты для А*:
+a e a b 3.0 b c 1.0 c d 1.0 a d 5.0 d e 1.0 
+a h a b 3.0 a c 1.0 a d 2.0 b e 5.0 c f 2.0 d g 6.0 e h 1.0 f h 3.0 g h 1.0
+a g a b 1.0 b c 1.0 a d 3.0 d e 1.0 d f 2.0 f g 4.0
+a e a b 2.0 b c 1.0 a d 3.0
+
+Тесты для Greedy:
+a e a b 3.0 b c 1.0 c d 1.0 a d 5.0 d e 1.0
+a h a b 3.0 a c 1.0 a d 2.0 b e 5.0 c f 2.0 d g 6.0 e h 1.0 f h 3.0 g h 1.0
+a g a b 1.0 b c 1.0 a d 3.0 d e 1.0 d f 2.0 f g 4.0
+a e a b 2.0 b c 1.0 a d 3.0
