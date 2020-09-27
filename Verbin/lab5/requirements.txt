@@ -1,0 +1,10 @@
+https://www.onlinegdb.com/online_c++_compiler
+- ссылка на онлайн компилятор
+
+Тесты для main1.cpp:
+asdfasfaslkas 4 as fas fasf a
+asdfasdased 3 asd asdf as
+
+Тесты для main2.cpp:
+actataaha ax x
+xabvccbababcax ab??c? ?
