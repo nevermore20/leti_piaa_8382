@@ -1,0 +1,8 @@
+https://www.onlinegdb.com/online_c++_compiler
+- ссылка на онлайн-компилятор
+
+Тесты:
+7 0
+40 1 20
+13 0
+23 0
