@@ -50,21 +50,29 @@ void prefixFunction(std::string& sample, std::vector<int>& prefix) {
 
 
 std::vector< std::pair<std::string, int >> toFlows(std::string text, const int uFlow, int maxFlow) {
-    
+
     std::vector< std::pair<std::string, int >> tmp;
     int step = maxFlow / uFlow;
     int ind = 0;
-    for (int i = 0; i < uFlow; i ++) {
+    int freeSize = text.length() - ( step * uFlow + text.length() - maxFlow );
+    
+    for (int i = 0; i < uFlow; i++) {
         int len;
         if (uFlow - i == 1) {
             len = text.length() - ind;
         }
         else {
-            len = step + text.length()- maxFlow;
+            len = step + text.length() - maxFlow;
+            if (freeSize > 0) {
+                len++;
+            }
         }
-        tmp.push_back(std::make_pair(text.substr(ind, len) ,ind));
+        tmp.push_back(std::make_pair(text.substr(ind, len), ind));
+        if (freeSize > 0) {
+            ind++; freeSize--;
+        }
         ind += step;
- //       std::cout << tmp[tmp.size() - 1].first << "ind: " << tmp[tmp.size() - 1].second << std::endl;
+        std::cout << "Добавлен поток: " << tmp[tmp.size() - 1].first << " Начальный индекс: " << tmp[tmp.size() - 1].second << std::endl;
     }
 
     return tmp;
@@ -89,6 +97,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         for (int j = 0; j < flows.size(); j++) {
+            std::cout <<  "\nПоиск образа в потокe: " << flows[j].first << ";";
             for (int i = 0; i < flows[j].first.length(); i++) {
                 while (k > 0 && sample[k] != flows[j].first[i])
                     k = prefix[k - 1];
@@ -97,7 +106,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                     k = k + 1;
                 else if (k != 0) k = prefix[k - 1];
                 if (k == sample.length()) {
-                    std::cout << "Найден образ, поток: " << flows[j].first << "; позиция: " << flows[j].second + i - sample.length() + 1 << std::endl;
+                    std::cout << "\n\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << std::endl;
                     flag = true;
                 }
 
@@ -118,7 +127,7 @@ int main()
     std::cin >> sample; std::cin >> text;
     std::vector<int> prefix(sample.length());
     prefixFunction(sample, prefix);
-     
+
     findEntry(text, sample, prefix);
     return 0;
 }
