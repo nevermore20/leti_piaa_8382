@@ -57,7 +57,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     int k = 0;   //индекс сравниваемого символа в sample
     bool flag = false;
     if (text.length() <= sample.length()) {
-        std::cout << "\nНе является циклическим сдвигом: ";
+        std::cout << "\nНе может быть образов: ";
         std::cout << "-1";
         return false;
     }
@@ -71,13 +71,13 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
             k = k + 1;
         else if (k != 0) k = prefix[k - 1];
         if (k == sample.length()) {
-            std::cout << "Является сдвигом, позиция: ";
+            std::cout << "Найден образ, позиция: ";
             std::cout << i - sample.length() + 1 << std::endl;
             flag =  true;
         }
 
     }
-    if (!flag) std::cout << "\nНе является циклическим сдвигом: "  <<  -1;
+    if (!flag) std::cout << "\nНет образовм: "  <<  -1;
     return flag;
 
 
