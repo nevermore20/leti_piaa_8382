@@ -6,8 +6,6 @@
 #include <climits>
 
 bool INTER = true;
-
-
 //перегруженны оператор вывода вектора в поток
 std::ostream& operator<<(std::ostream& stream, std::vector<int> vect) {
     stream << vect[0];
@@ -51,7 +49,26 @@ void prefixFunction(std::string& sample, std::vector<int>& prefix) {
 }
 
 
+std::vector< std::pair<std::string, int >> toFlows(std::string text, const int uFlow, int maxFlow) {
+    
+    std::vector< std::pair<std::string, int >> tmp;
+    int step = maxFlow / uFlow;
+    int ind = 0;
+    for (int i = 0; i < uFlow; i ++) {
+        int len;
+        if (uFlow - i == 1) {
+            len = text.length() - ind;
+        }
+        else {
+            len = step + text.length()- maxFlow;
+        }
+        tmp.push_back(std::make_pair(text.substr(ind, len) ,ind));
+        ind += step;
+ //       std::cout << tmp[tmp.size() - 1].first << "ind: " << tmp[tmp.size() - 1].second << std::endl;
+    }
 
+    return tmp;
+}
 //функция определения сдвига
 bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix) {
     int k = 0;   //индекс сравниваемого символа в sample
@@ -61,26 +78,35 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
         std::cout << "-1";
         return false;
     }
+    int maxFlow = text.length() - (sample.length() - 1);
+    std::cout << "Максимальное колличество потоков: " << maxFlow << " |Введите колличество потоков: ";
+    int uFlow;
+    std::cin >> uFlow;
+    if (uFlow > maxFlow || uFlow < 0) {
+        std::cout << "Ошибка в вводе! | Введите колличество потоков: ";
+        std::cin >> uFlow;
+    }
+    else {
+        std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
+        for (int j = 0; j < flows.size(); j++) {
+            for (int i = 0; i < flows[j].first.length(); i++) {
+                while (k > 0 && sample[k] != flows[j].first[i])
+                    k = prefix[k - 1];
 
+                if (sample[k] == flows[j].first[i])
+                    k = k + 1;
+                else if (k != 0) k = prefix[k - 1];
+                if (k == sample.length()) {
+                    std::cout << "Найден образ, поток: " << flows[j].first << "; позиция: " << flows[j].second + i - sample.length() + 1 << std::endl;
+                    flag = true;
+                }
 
-    for (int i = 0; i < text.length(); i++) {
-        while (k > 0 && sample[k] != text[i])
-            k = prefix[k - 1];
-
-        if (sample[k] == text[i])
-            k = k + 1;
-        else if (k != 0) k = prefix[k - 1];
-        if (k == sample.length()) {
-            std::cout << "Найден образ, позиция: ";
-            std::cout << i - sample.length() + 1 << std::endl;
-            flag =  true;
+            }
         }
+        if (!flag) std::cout << "\nНет образовм: " << -1;
+        return flag;
 
     }
-    if (!flag) std::cout << "\nНет образовм: "  <<  -1;
-    return flag;
-
-
 }
 
 
@@ -89,9 +115,10 @@ int main()
     setlocale(LC_ALL, "Russian");
     std::string text;
     std::string sample;
-    std::cin >> sample;std::cin >> text;
+    std::cin >> sample; std::cin >> text;
     std::vector<int> prefix(sample.length());
     prefixFunction(sample, prefix);
+     
     findEntry(text, sample, prefix);
     return 0;
 }
