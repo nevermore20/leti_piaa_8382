@@ -97,16 +97,27 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         for (int j = 0; j < flows.size(); j++) {
-            std::cout <<  "\nПоиск образа в потокe: " << flows[j].first << ";";
+            std::cout <<  "\nПоиск образа в потокe: " << flows[j].first << ";\n";
             for (int i = 0; i < flows[j].first.length(); i++) {
                 while (k > 0 && sample[k] != flows[j].first[i])
                     k = prefix[k - 1];
 
-                if (sample[k] == flows[j].first[i])
+                if (sample[k] == flows[j].first[i]) {
+                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\n";
                     k = k + 1;
-                else if (k != 0) k = prefix[k - 1];
+                }
+                else {
+                    std::cout << "\ttext[" << i << "] != sample[" << k << "]";
+                    if (k != 0) {
+                        std::cout << "; k = " << prefix[k - 1] << std::endl;
+                        //     k = prefix[k - 1];
+                    }
+                    else {
+                        std::cout << std::endl;
+                    }
+                }
                 if (k == sample.length()) {
-                    std::cout << "\n\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << std::endl;
+                    std::cout << "\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
                     flag = true;
                 }
 
