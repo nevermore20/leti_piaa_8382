@@ -55,8 +55,8 @@ std::vector< std::pair<std::string, int >> toFlows(std::string text, const int u
     std::vector< std::pair<std::string, int >> tmp;
     int step = maxFlow / uFlow;
     int ind = 0;
-    int freeSize = text.length() - ( step * uFlow + text.length() - maxFlow );
-    
+    int freeSize = text.length() - (step * uFlow + text.length() - maxFlow);
+
     for (int i = 0; i < uFlow; i++) {
         int len;
         if (uFlow - i == 1) {
@@ -102,27 +102,40 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         std::cout << std::endl;
         for (int j = 0; j < flows.size(); j++) {
-            std::cout << "Поиск циклического сдвига в потокe: " << flows[j].first << ";" << std::endl;
+            std::cout << "\nПоиск циклического сдвига в потокe: " << flows[j].first << ";\n" << std::endl;
             for (int i = 0; i < flows[j].first.length(); i++) {
-                while (k > 0 && sample[k] != flows[j].first[i])
+                while (k > 0 && sample[k] != flows[j].first[i]) {
                     k = prefix[k - 1];
+                }
 
-                if (sample[k] == flows[j].first[i])
+                if (sample[k] == flows[j].first[i]) {
+                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\n";
                     k = k + 1;
-                else if (k != 0) k = prefix[k - 1];
+                }
+                else {
+                    std::cout << "\ttext[" << i << "] != sample[" << k << "]";
+                    if (k != 0) {
+                        std::cout << "; k = " << prefix[k - 1] << std::endl;
+                   //     k = prefix[k - 1];
+                    }
+                    else {
+                        std::cout << std::endl;
+                    }
+                }
+         
                 if (k == sample.length()) {
-                    std::cout << "\n\tНайден циклический сдвиг! позиция: " << flows[j].second + i - sample.length() + 1 << std::endl;
+                    std::cout << "\n\tНайден циклический сдвиг! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
                     flag = true;
                 }
 
             }
-        } 
+        }
         if (!flag) {
             std::cout << "\nНе является циклическим сдвигом: ";
             std::cout << "-1";
         }
 
-    } 
+    }
     return flag;
 }
 
@@ -132,10 +145,9 @@ int main()
     setlocale(LC_ALL, "Russian");
     std::string text;
     std::string sample;
-    std::cin >> sample; std::cin >> text;
+    std::cin >> text;std::cin >> sample;
     std::vector<int> prefix(sample.length());
     prefixFunction(sample, prefix);
-
     findEntry(text, sample, prefix);
     return 0;
 }
