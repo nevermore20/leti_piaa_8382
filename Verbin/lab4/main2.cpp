@@ -83,6 +83,7 @@ std::vector< std::pair<std::string, int >> toFlows(std::string text, const int u
 //функция определения сдвига
 bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix) {
     int k = 0;   //индекс сравниваемого символа в sample
+    std::vector<int> result;
     bool flag = false;
     if (text.length() != sample.length()) {
         std::cout << "\nНе является циклическим сдвигом: ";
@@ -116,15 +117,16 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                     std::cout << "\ttext[" << i << "] != sample[" << k << "]";
                     if (k != 0) {
                         std::cout << "; k = " << prefix[k - 1] << std::endl;
-                   //     k = prefix[k - 1];
+                        //     k = prefix[k - 1];
                     }
                     else {
                         std::cout << std::endl;
                     }
                 }
-         
+
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден циклический сдвиг! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
+                    result.push_back(flows[j].second + i - sample.length() + 1);
                     flag = true;
                 }
 
@@ -136,6 +138,14 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
         }
 
     }
+    if (flag) {
+        std::cout << "\nResult: ";
+        for (int i = 0; i < result.size(); i++) {
+            if (i > 0) std::cout << ", ";
+            std::cout << result[i];
+        }
+        std::cout << std::endl;
+    }
     return flag;
 }
 
@@ -145,7 +155,7 @@ int main()
     setlocale(LC_ALL, "Russian");
     std::string text;
     std::string sample;
-    std::cin >> text;std::cin >> sample;
+    std::cin >> text; std::cin >> sample;
     std::vector<int> prefix(sample.length());
     prefixFunction(sample, prefix);
     findEntry(text, sample, prefix);
