@@ -81,6 +81,7 @@ std::vector< std::pair<std::string, int >> toFlows(std::string text, const int u
 bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix) {
     int k = 0;   //индекс сравниваемого символа в sample
     bool flag = false;
+    std::vector<int> result;
     if (text.length() <= sample.length()) {
         std::cout << "\nНе может быть образов: ";
         std::cout << "-1";
@@ -118,15 +119,25 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                 }
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
+                    result.push_back(flows[j].second + i - sample.length() + 1);
                     flag = true;
                 }
 
             }
         }
         if (!flag) std::cout << "\nНет образовм: " << -1;
+        if (flag) {
+        std::cout << "\nResult: ";
+        for (int i = 0; i < result.size(); i++) {
+            if (i > 0) std::cout << ", ";
+            std::cout << result[i];
+        }
+        std::cout << std::endl;
+    }
         return flag;
 
     }
+    
 }
 
 
