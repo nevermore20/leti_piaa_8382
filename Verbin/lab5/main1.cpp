@@ -1,233 +1,323 @@
 #include <iostream>
+#include <string>
 #include <vector>
-#include <fstream>
-#include <map>
-#include <unordered_map>
+#include <set>
 #include <queue>
 #include <algorithm>
+#include <unordered_map>
 
 using namespace std;
-void inputConsole(string *word, int *n ,vector<string> *templates);
 
-class TNode{
-private:
-    char symbol;
-    unordered_map<char, TNode*> sons;
-    TNode* parent = nullptr;
-    TNode* suffLink = nullptr;
-    string str = "";
-    int terminated;
+class Tree {
 
+    string dbgStr = ""; // Для отладки
+    char value; // Значение узла
+    size_t numOfPattern = 0; // Номер введенного паттерна
+    Tree *parent = nullptr; // Родитель ноды
+    Tree* suffixLink = nullptr; // Суффиксная ссылка
+    Tree* finishLink = nullptr; // конечная ссылка
+    unordered_map <char, Tree*> children; // Потомки узла
 public:
-    explicit TNode(char c): symbol(c), terminated(0){}
-
-    void insert(string temp, int numPattern){
-        TNode* curr = this;
-
-        for (char symbol: temp) {
-            if (curr->sons[symbol] == nullptr) {
-                curr->sons[symbol] = new TNode(symbol);  // создаем нового ребенка
-                curr->sons[symbol]->parent = curr;
-                curr->sons[symbol]->str = curr->str + symbol;
-            }
-            curr = curr->sons[symbol];
+    Tree() : value('\0') {}
+    Tree(char val) : value(val) {} // Конструктор ноды
+    void initialization(vector<string> patterns){
+        for(auto &pattern : patterns){
+            this->insert(pattern);
         }
-        cout << "Insert pattern: " << temp << endl;
-        curr->terminated = numPattern + 1;
+    }
+    void printInfo(Tree *curr){
+
+        cout << curr->dbgStr << ':' << endl;
+
+        if (curr->suffixLink)
+               cout << "\tСуффиксная ссылка: " << (curr->suffixLink == this ? "Корень" : curr->suffixLink->dbgStr) << endl;
+        if(curr->finishLink)
+               cout << "\tКонечная ссылка: " << (curr->finishLink->dbgStr) << endl;
+
+        if(curr -> parent)
+            cout << "\tРодитель: "  << (curr->parent->value ? curr->parent->dbgStr :  "Корень") << endl;
+
+        if (!curr->children.empty())
+            cout << "\tПотомок: ";
+        for (auto child : curr->children) {
+            cout << child.second->value << ' ';
+
+        }
+    }
+    // Вставка подстроки в бор
+    void insert(const string &str) {
+        auto curr = this;
+        static size_t countPatterns = 0;
+
+        for (char c : str) { // Идем по строке
+            // Если из текущей вершины по текущему символу не было создано перехода
+            if (curr->children.find(c) == curr->children.end()) {
+                // Создаем переход
+                curr->children[c] = new Tree(c);
+                curr->children[c]->parent = curr;
+                curr->children[c]->dbgStr += curr->dbgStr + c;
+            }
+            // Спускаемся по дереву
+            curr = curr->children[c];
+        }
+
+        cout << "Вставляем строку: " << str << endl;
+        printBor();
+
+        // Показатель терминальной вершины, значение которого равно порядковому номеру добавления шаблона
+        curr->numOfPattern = ++countPatterns;
     }
 
+    //печать бора
+    void printBor() {
+        cout << "Текущее состояние бора:" << endl;
 
-    //  поиск символа префикса в боре и всех вхождений шаблонов в его путь
-    vector<int> getChain(char c, int *maxSuffLen, int *maxEndLen){
-        vector<int> templatesInside;
-        int currSuffLen = 0;
-        int currEndLen = 0;
-        static const TNode* curr = this;
+        queue<Tree *> queue;
+        queue.push(this);
 
-        for (; curr != nullptr ; curr = curr->suffLink) {
-            for (auto son: curr->sons) {
-                cout << "Child: " << son.first << endl;
-                if(son.first == c) {
-                    cout << "This is the child they were looking for! \n";
-                    curr = son.second;
-                    for (auto node = curr; node->suffLink != nullptr; node = node->suffLink, currSuffLen++)
-                        if(node->terminated > 0) {
-                            currEndLen++;
-                            cout << "A terminal vertex '"<<node->symbol <<"' was found for the template " << node->terminated << endl;
-                            templatesInside.push_back(node->terminated);
-                        }
-                    *maxSuffLen = (*maxSuffLen < currSuffLen) ? currSuffLen : *maxSuffLen;
-                    *maxEndLen = (*maxEndLen < currEndLen) ? currEndLen : *maxEndLen;
-                    cout << "Current max suffix link chain lenght: " << *maxSuffLen << endl;
-                    cout << "Current max end link chain lenght: " << *maxEndLen << endl;
-                    return templatesInside;
+        while (!queue.empty()) {
+
+            auto curr = queue.front();
+            if (!curr->value)
+                cout << "Корень:" << endl;
+            else
+                printInfo(curr);
+                for (auto child : curr->children) {
+                    queue.push(child.second);
                 }
+
+            queue.pop();
+            cout << endl;
+        }
+        cout << endl;
+
+    }
+
+
+    // Функция для поиска подстроки в строке при помощи автомата
+    vector<size_t> find(const char c) {
+        static const Tree *curr = this; // Вершина, с которой необходимо начать следующий вызов
+        cout << "Ищем '" << c << "' из: " << (curr->dbgStr.empty() ? "Корень" : curr->dbgStr) << endl; // Дебаг
+
+        for (; curr != nullptr; curr = curr->suffixLink) {
+            // Обходим потомков, если искомый символ среди потомков не найден, то
+            // переходим по суффиксной ссылке для дальнейшего поиска
+            for (auto child : curr->children)
+                if (child.first == c) { // Если символ потомка равен искомому
+                    curr = child.second; // Значение текущей вершины переносим на этого потомка
+                    vector<size_t> visited; // Вектор номеров найденных терм. вершин
+                    // Обходим суффиксы, т.к. они тоже могут быть терминальными вершинами
+                    for (auto temp = curr; temp->suffixLink; temp = temp->suffixLink)
+                        if (temp->numOfPattern)
+                            visited.push_back(temp->numOfPattern - 1);
+                    //
+
+                    cout << "Символ найден!" << endl; // Дебаг
+                    return visited;
+                }
+
+            if (curr->suffixLink) {
+                cout << "Переходим по суффиксной ссылке: ";
+                cout << (curr->suffixLink->dbgStr.empty() ? "Корень" : curr->suffixLink->dbgStr) << endl;
             }
         }
+        cout << "Символ не найден!" << endl; // Дебаг
+
         curr = this;
-        cout << "The end of the template for this position was not found.\n";
-        return templatesInside;
+        return {};
+    }
+
+    // Функция для построения недетерминированного автомата
+    void makeAutomaton() {
+
+        cout << "Строим автомат: " << endl;
+        queue<Tree *> queue; // Очередь для обхода в ширину
+
+        for (auto child : children) // Заполняем очередь потомками корня
+            queue.push(child.second);
+
+        while (!queue.empty()) {
+            auto curr = queue.front(); // Обрабатываем вершину из очереди
+            printInfo(curr);
+            // Заполняем очередь потомками текущей верхушки
+            for (auto child : curr->children) {
+                queue.push(child.second);
+            }
+
+            if (!curr->children.empty())
+                cout << endl;
+
+            queue.pop();
+            auto p = curr->parent; // Ссылка на родителя обрабатываемой вершины
+            char x = curr->value; // Значение обрабатываемой вершины
+            if (p)
+                p = p->suffixLink; // Если родитель существует, то переходим по суффиксной ссылке
+
+            // Пока можно переходить по суффиксной ссылке или пока
+            // не будет найден переход в символ обрабатываемой вершины
+            while (p && p->children.find(x) == p->children.end())
+                p = p->suffixLink; // Переходим по суффиксной ссылке
+
+            // Суффиксная ссылка для текущей вершины равна корню, если не смогли найти переход
+            // в дереве по символу текущей вершины, иначе равна найденной вершине
+            curr->suffixLink = p ? p->children[x] : this;
+
+            // Дебаг
+            cout << "\tСуффиксная ссылка: " << (curr->suffixLink == this ? "Корень" : curr->suffixLink->dbgStr) << endl << endl;
+        }
+
+        // Дебаг
+        cout << endl;
+        printBor();
     }
 
 
-    // функция для построения суффиксных ссылок
-    void makeSuffixLinks(){
+
+    void makeFinishLink(){
+
+        cout << "Строим конечные ссылки" << endl;
+
+        queue<Tree *> queue;
+        queue.push(this);
+
+        while (!queue.empty()) {
+
+            auto curr = queue.front();
+            auto next = curr;
+            //проходим по суффиксным ссылкам каждой вершины автомата
+            while(1){
+
+                if(next->suffixLink && next->suffixLink->value){//есть возможность перейти по суффиксной ссылке не в корень
+                    next = next->suffixLink;//переходим
+                }
+                else break;//цепочка суффиксных ссылок закончилась
+
+                if(next->numOfPattern){//вершина - терминальная
+                    curr->finishLink = next;//строим конечную ссылку
+                    break;
+                }
 
 
-        queue<TNode*> q;
-        for (auto son: sons) {     // можно внести это в цикл
-            q.push(son.second);
-        }
-        while(!q.empty()) {
-            TNode* curr = q.front();  //  берем вершину из очереди для обработки
-            cout << "Considered vertex: " << curr->symbol << " Substring: " << curr->str << endl;
-            for(pair<const char, TNode *> son: curr->sons) {
-                q.push(son.second);
             }
-            q.pop();
+            //обход в ширину
+            for (auto child : curr->children) {
+                queue.push(child.second);
+            }
 
-            TNode* par = curr->parent;
-            if(par != nullptr)   // переходим по суфф. ссылке предыдущей вершины
-                par = par->suffLink;
+            queue.pop();
+        }
+        printBor();
+    }
 
+    void findMaxLinkChain(){//индивидуализация поиск максимальных цепей
 
-            while(par && par->sons.find(curr->symbol) == par->sons.end()) //проверка, есть ли нужный символ
-            {
+        size_t maxSuffixChain = 0;
+        size_t maxFinishChain = 0;
+        size_t buf = 0;//для хранения длины цепочки из текущей вершины
 
-                par = par->suffLink;                             // в потомках рассматриваемой вершины,
-            }                                                        // если нет, то переходим по суфф ссылке
+        queue<Tree *> queue;
+        queue.push(this);
 
-            if(par)  {curr->suffLink = par->sons[curr->symbol]; cout << " Suffix link: " << curr->suffLink->symbol << " Substring: " << curr->suffLink->str << endl;}
-                //  присваиваем суффиксную ссылку, если она найдена
-            else curr->suffLink = this;      //  иначе присваиваем ссылку в себя
+        while (!queue.empty()) {
+
+            auto curr = queue.front();
+            auto next = curr;
+
+            //проходим по суффиксным ссылкам каждой вершины автомата
+            if(curr->value)
+                cout << curr->dbgStr << ":" << endl << "\tСуффиксная цепочка ";
+            cout << curr->dbgStr;
+            buf = 0;
+            while(1){
+                if(next->suffixLink ){//&& next->suffixLink->value){//есть возможность перейти по суффиксной ссылке не в корень
+                    next = next->suffixLink;//переходим
+                    cout << "->" << next->dbgStr;
+                    buf++;//увеличиваем длину цепи
+
+                }
+                else break;//цепочка суффиксных ссылок закончилась
+            }
+            cout << "Корень" << endl;
+            maxSuffixChain = max(maxSuffixChain, buf);
+            //cout << "Текущая максимальная длина цепи суффиксных ссылок: " << maxSuffixChain << endl;
+
+            buf = 0;
+            next = curr;
+            if(curr->finishLink)
+                cout << "\tЦепочка конечных ссылок " << curr->dbgStr;
+            else cout << endl;
+            while(1){
+                if(next->finishLink ){//есть возможность перейти по конечной ссылке
+                    next = next->finishLink;//переходим
+                    if(next->dbgStr != "")
+                        cout << "->" << next->dbgStr;
+                    buf++;//увеличиваем длину цепи
+                }
+                else break;//цепочка суффиксных ссылок закончилась
+            }
+            maxFinishChain = max(maxFinishChain, buf);
+            //cout << "Текущая максимальная длина цепи конечных ссылок: " << maxFinishChain <<endl;
+
+            //обход в ширину
+            for (auto child : curr->children) {
+                queue.push(child.second);
+            }
+
+            queue.pop();
             cout << endl;
         }
+        cout << endl;
+
+        cout << "Максимальная длина цепи из суффиксных ссылок - " << maxSuffixChain << endl;
+        cout << "Максимальная длина цепи из конечных ссылок - " << maxFinishChain << endl;
+        cout << endl;
 
     }
 
-
-    void printTrie(TNode* root){
-        TNode* curr = root;
-
-        cout <<"\nString: " << curr->str << endl;
-        if(curr->terminated > 0)
-            cout <<"--->Terminated!" << "\n";
-
-        if(curr->parent) {
-            if (curr->parent->symbol != '\0') {
-                cout << "    Symbol: " << curr->symbol << "    ";
-                cout << "    Parent: " << curr->parent->symbol << endl;
-            }
-            if (curr->parent->symbol == '\0') {
-                cout << "    Symbol: " << "'\\0' ";
-                cout << "    Parent: root" << endl;
-            }
-        }
-        else
-            cout << "    Root" << endl;
-        if(curr->suffLink)
-            cout << "    Suffix link: " << curr->suffLink->str << endl;
-
-        cout << "    Children: ";
-        if(curr->sons.size() > 0) {
-            for (auto c:curr->sons) {
-                cout << c.first << " ";
-            }
-            cout << endl;
-        }
-        else cout << " none \n";
-        for(auto tmp:curr->sons) {
-            if (tmp.second) {
-                printTrie(tmp.second);
-            }
-        }
+    ~Tree() { // Деструктор ноды
+        for (auto child : children) delete child.second;
     }
+
+
 };
 
-class Trie{
-private:
-    TNode node;
-    int maxSuffLen;
-    int maxEndLen;
-public:
-    Trie(): node('\0'), maxSuffLen(0), maxEndLen(0) {}
+auto AhoCorasick(const string &text, const vector <string> &patterns)
+{
+    Tree bor;
+    set <pair<size_t, size_t>> result;
 
-    void printMaxLenghts(){
-        cout << "\nMax suffix link chain lenght: " << maxSuffLen << endl;
-        cout << "Max end link chain lenght: " << maxEndLen << endl;
-    }
-    TNode* getRoot(){
-        return &node;
-    }
-    vector<int> getChain(char c){
-        return node.getChain(c, &maxSuffLen, &maxEndLen);
-    }
-    void makeSuffixLinks(){
-        node.makeSuffixLinks();
-    }
-    void insert(string temp, int numPattern){
-        node.insert(temp, numPattern);
-    }
-};
+    bor.initialization(patterns);
+    bor.makeAutomaton(); // Из полученного бора создаем автомат (путем добавления суффиксных ссылок)
+    bor.makeFinishLink();//добавляем конечные ссылки
+    bor.findMaxLinkChain();//поиск максимальных длин цепей ссылок
 
 
-int main() {
-    string str;
-    int n;
-    map<int, vector<int>> res;
-    vector<string> templates(10);
-//    inputConsole(&str, &n, &templates);
-//------------------------------------------
-    cin >> str >> n;
-    templates.resize(n);
-    for (int i = 0; i < n; ++i) { cin >> templates[i]; }
-    //-----------------------------------------
-
-    Trie root;
-    // построение бора
-    cout << "\nStarted the construction of the Trie... \n";
-    for (int j = 0; j < n; ++j) {
-        root.insert(templates[j], j);
-    }
-    cout << "-------------------------- Suffix links -----------------------------\n";
-    cout << "\nThe process of creating suffix links...\n";
-    root.makeSuffixLinks();
-    cout << "-------------------------Built the trie -----------------------------\n";
-    root.getRoot()->printTrie(root.getRoot());
-
-    cout << "------------------------ Substring search -----------------------------\n";
-    for (int i = 0; i < str.length(); ++i) {
-        cout << "\nSymbol: " << str[i] << "  Index: " << i << endl;
-        vector<int> tmp = root.getChain(str[i]);
-        for (auto index: tmp) {
-            res[i - templates[index - 1].size() + 2].push_back(index);
-            sort(res[i - templates[index - 1].size() + 2].begin(),
-                 res[i - templates[index - 1].size() + 2].end());
+    {
+        size_t j = 0;
+        for(auto &el : text){//поиск для каждого символа строки
+            for(auto pos : bor.find(el))// Проходим по всем найденным позициям, записываем в результат
+                result.emplace(j - patterns[pos].size() + 2, pos + 1);
+            j++;
         }
     }
-    root.printMaxLenghts();
 
-    cout << "Index Pattern\n";
-    for (auto it: res) {
-        for (auto k: it.second) {
-            cout << "" << it.first << "     " <<  k << endl;
-
-        }
-    }
-    return 0;
+    return result;
 }
 
-void inputConsole(string *word,int *n ,vector<string> *templates){
-    ifstream file;
-    file.open("input.txt");
-    if (file.is_open()) {
-        file >> *word >> *n;
-        templates->resize(*n);
-        for (int i = 0; i < *n; ++i) {
-            file >> (*templates)[i];
-        }
-        file.close();
-    } else {
-        cout << "File isn't open!";
+int main()
+{
+    string text;
+    size_t n;
+    cin >> text >> n;
+    vector <string> patterns(n);//словарь
+
+    for(auto &pattern : patterns){
+        cin >> pattern;
     }
-} 
+
+    auto res = AhoCorasick(text, patterns);
+    for (auto r : res)
+        cout << r.first << ' ' << r.second << endl;
+
+    return 0;
+}
