@@ -13,29 +13,29 @@ class Tree {
     string dbgStr = ""; // Для отладки
     char value; // Значение узла
     size_t numOfPattern = 0; // Номер введенного паттерна
-    Tree *parent = nullptr; // Родитель ноды
+    Tree* parent = nullptr; // Родитель ноды
     Tree* suffixLink = nullptr; // Суффиксная ссылка
     Tree* finishLink = nullptr; // конечная ссылка
     unordered_map <char, Tree*> children; // Потомки узла
 public:
     Tree() : value('\0') {}
     Tree(char val) : value(val) {} // Конструктор ноды
-    void initialization(vector<string> patterns){
-        for(auto &pattern : patterns){
+    void initialization(vector<string> patterns) {
+        for (auto& pattern : patterns) {
             this->insert(pattern);
         }
     }
-    void printInfo(Tree *curr){
+    void printInfo(Tree* curr) {
 
         cout << curr->dbgStr << ':' << endl;
 
         if (curr->suffixLink)
-               cout << "\tСуффиксная ссылка: " << (curr->suffixLink == this ? "Корень" : curr->suffixLink->dbgStr) << endl;
-        if(curr->finishLink)
-               cout << "\tКонечная ссылка: " << (curr->finishLink->dbgStr) << endl;
+            cout << "\tСуффиксная ссылка: " << (curr->suffixLink == this ? "Корень" : curr->suffixLink->dbgStr) << endl;
+        if (curr->finishLink)
+            cout << "\tКонечная ссылка: " << (curr->finishLink->dbgStr) << endl;
 
-        if(curr -> parent)
-            cout << "\tРодитель: "  << (curr->parent->value ? curr->parent->dbgStr :  "Корень") << endl;
+        if (curr->parent)
+            cout << "\tРодитель: " << (curr->parent->value ? curr->parent->dbgStr : "Корень") << endl;
 
         if (!curr->children.empty())
             cout << "\tПотомок: ";
@@ -45,7 +45,7 @@ public:
         }
     }
     // Вставка подстроки в бор
-    void insert(const string &str) {
+    void insert(const string& str) {
         auto curr = this;
         static size_t countPatterns = 0;
 
@@ -72,7 +72,7 @@ public:
     void printBor() {
         cout << "Текущее состояние бора:" << endl;
 
-        queue<Tree *> queue;
+        queue<Tree*> queue;
         queue.push(this);
 
         while (!queue.empty()) {
@@ -82,9 +82,9 @@ public:
                 cout << "Корень:" << endl;
             else
                 printInfo(curr);
-                for (auto child : curr->children) {
-                    queue.push(child.second);
-                }
+            for (auto child : curr->children) {
+                queue.push(child.second);
+            }
 
             queue.pop();
             cout << endl;
@@ -96,7 +96,7 @@ public:
 
     // Функция для поиска подстроки в строке при помощи автомата
     vector<size_t> find(const char c) {
-        static const Tree *curr = this; // Вершина, с которой необходимо начать следующий вызов
+        static const Tree* curr = this; // Вершина, с которой необходимо начать следующий вызов
         cout << "Ищем '" << c << "' из: " << (curr->dbgStr.empty() ? "Корень" : curr->dbgStr) << endl; // Дебаг
 
         for (; curr != nullptr; curr = curr->suffixLink) {
@@ -131,7 +131,7 @@ public:
     void makeAutomaton() {
 
         cout << "Строим автомат: " << endl;
-        queue<Tree *> queue; // Очередь для обхода в ширину
+        queue<Tree*> queue; // Очередь для обхода в ширину
 
         for (auto child : children) // Заполняем очередь потомками корня
             queue.push(child.second);
@@ -152,11 +152,14 @@ public:
             char x = curr->value; // Значение обрабатываемой вершины
             if (p)
                 p = p->suffixLink; // Если родитель существует, то переходим по суффиксной ссылке
-
+            if (p) cout << "\t\tПоиск cуффиксной ссылки символа '" << x << "' в '" << ((p->dbgStr.length() != 0) ? p->dbgStr : "Корень") << "' потомках" << endl;
+            else cout << "\t\tПоиск cуффиксной ссылки символа '" << x << "' в " <<  "'Корень'" << " потомках" << endl;
             // Пока можно переходить по суффиксной ссылке или пока
             // не будет найден переход в символ обрабатываемой вершины
-            while (p && p->children.find(x) == p->children.end())
-                p = p->suffixLink; // Переходим по суффиксной ссылке
+            while (p && p->children.find(x) == p->children.end()) {
+                p = p->suffixLink; // Переходим по суффиксной ссылке               
+                if (p) cout << "\t\tПоиск cуффиксной ссылки символа '" << x << "' в '" <<(( p->dbgStr.length() != 0) ? p->dbgStr : "Корень") << "' потомках" << endl;
+            }
 
             // Суффиксная ссылка для текущей вершины равна корню, если не смогли найти переход
             // в дереве по символу текущей вершины, иначе равна найденной вершине
@@ -173,11 +176,11 @@ public:
 
 
 
-    void makeFinishLink(){
+    void makeFinishLink() {
 
         cout << "Строим конечные ссылки" << endl;
 
-        queue<Tree *> queue;
+        queue<Tree*> queue;
         queue.push(this);
 
         while (!queue.empty()) {
@@ -185,14 +188,14 @@ public:
             auto curr = queue.front();
             auto next = curr;
             //проходим по суффиксным ссылкам каждой вершины автомата
-            while(1){
+            while (1) {
 
-                if(next->suffixLink && next->suffixLink->value){//есть возможность перейти по суффиксной ссылке не в корень
+                if (next->suffixLink && next->suffixLink->value) {//есть возможность перейти по суффиксной ссылке не в корень
                     next = next->suffixLink;//переходим
                 }
                 else break;//цепочка суффиксных ссылок закончилась
 
-                if(next->numOfPattern){//вершина - терминальная
+                if (next->numOfPattern) {//вершина - терминальная
                     curr->finishLink = next;//строим конечную ссылку
                     break;
                 }
@@ -209,13 +212,13 @@ public:
         printBor();
     }
 
-    void findMaxLinkChain(){//индивидуализация поиск максимальных цепей
+    void findMaxLinkChain() {//индивидуализация поиск максимальных цепей
 
         size_t maxSuffixChain = 0;
         size_t maxFinishChain = 0;
         size_t buf = 0;//для хранения длины цепочки из текущей вершины
 
-        queue<Tree *> queue;
+        queue<Tree*> queue;
         queue.push(this);
 
         while (!queue.empty()) {
@@ -224,12 +227,12 @@ public:
             auto next = curr;
 
             //проходим по суффиксным ссылкам каждой вершины автомата
-            if(curr->value)
+            if (curr->value)
                 cout << curr->dbgStr << ":" << endl << "\tСуффиксная цепочка ";
             cout << curr->dbgStr;
             buf = 0;
-            while(1){
-                if(next->suffixLink ){//&& next->suffixLink->value){//есть возможность перейти по суффиксной ссылке не в корень
+            while (1) {
+                if (next->suffixLink) {//&& next->suffixLink->value){//есть возможность перейти по суффиксной ссылке не в корень
                     next = next->suffixLink;//переходим
                     cout << "->" << next->dbgStr;
                     buf++;//увеличиваем длину цепи
@@ -243,13 +246,13 @@ public:
 
             buf = 0;
             next = curr;
-            if(curr->finishLink)
+            if (curr->finishLink)
                 cout << "\tЦепочка конечных ссылок " << curr->dbgStr;
             else cout << endl;
-            while(1){
-                if(next->finishLink ){//есть возможность перейти по конечной ссылке
+            while (1) {
+                if (next->finishLink) {//есть возможность перейти по конечной ссылке
                     next = next->finishLink;//переходим
-                    if(next->dbgStr != "")
+                    if (next->dbgStr != "")
                         cout << "->" << next->dbgStr;
                     buf++;//увеличиваем длину цепи
                 }
@@ -281,7 +284,7 @@ public:
 
 };
 
-auto AhoCorasick(const string &text, const vector <string> &patterns)
+auto AhoCorasick(const string& text, const vector <string>& patterns)
 {
     Tree bor;
     set <pair<size_t, size_t>> result;
@@ -294,8 +297,8 @@ auto AhoCorasick(const string &text, const vector <string> &patterns)
 
     {
         size_t j = 0;
-        for(auto &el : text){//поиск для каждого символа строки
-            for(auto pos : bor.find(el))// Проходим по всем найденным позициям, записываем в результат
+        for (auto& el : text) {//поиск для каждого символа строки
+            for (auto pos : bor.find(el))// Проходим по всем найденным позициям, записываем в результат
                 result.emplace(j - patterns[pos].size() + 2, pos + 1);
             j++;
         }
@@ -306,12 +309,13 @@ auto AhoCorasick(const string &text, const vector <string> &patterns)
 
 int main()
 {
+    setlocale(LC_ALL, "Russian");
     string text;
     size_t n;
     cin >> text >> n;
     vector <string> patterns(n);//словарь
 
-    for(auto &pattern : patterns){
+    for (auto& pattern : patterns) {
         cin >> pattern;
     }
 
