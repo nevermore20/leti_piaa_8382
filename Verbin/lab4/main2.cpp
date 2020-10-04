@@ -112,11 +112,11 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                 }
                 std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t";
                 if (sample[k] == flows[j].first[i]) {
-                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\n";
+                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\tk = k++\n";
                     k = k + 1;
                 }
                 else {
-                    std::cout << "\ttext[" << i << "] != sample[" << k << "]";
+                    std::cout << "\ttext[" << i << "] != sample[" << k << "]\tk = prefics[k-1]";
                     if (k != 0) {
                         std::cout << "; k = " << prefix[k - 1] << std::endl;
                         //     k = prefix[k - 1];
