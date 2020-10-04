@@ -4,6 +4,7 @@
 #include <map>
 #include <cmath>
 #include <climits>
+#include <algorithm>
 
 bool INTER = true;
 //перегруженны оператор вывода вектора в поток
@@ -108,7 +109,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                 while (k > 0 && sample[k] != flows[j].first[i]) {
                     k = prefix[k - 1];
                 }
-
+                std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t";
                 if (sample[k] == flows[j].first[i]) {
                     std::cout << "\ttext[" << i << "] == sample[" << k << "]\n";
                     k = k + 1;
@@ -126,7 +127,15 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
 
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден циклический сдвиг! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
-                    result.push_back(flows[j].second + i - sample.length() + 1);
+                    bool flag1 = true;
+                    for (int t = 0; t < result.size(); t++) {
+                        if (result[t] == flows[j].second + i - sample.length() + 1) {
+                            flag1 = false;
+                            break;
+                        }
+                    }
+
+                    if(flag1) result.push_back(flows[j].second + i - sample.length() + 1);
                     flag = true;
                 }
 
@@ -140,6 +149,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     }
     if (flag) {
         std::cout << "\nResult: ";
+        std::sort(result.begin(), result.end());
         for (int i = 0; i < result.size(); i++) {
             if (i > 0) std::cout << ", ";
             std::cout << result[i];
