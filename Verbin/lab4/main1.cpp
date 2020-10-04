@@ -109,6 +109,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         for (int j = 0; j < flows.size(); j++) {
+            k = 0;
             std::cout << "\nПоиск образа в потокe: " << flows[j].first << ":\n\n";
             for (int i = 0; i < flows[j].first.length(); i++) {
                 while (k > 0 && sample[k] != flows[j].first[i])
