@@ -4,6 +4,8 @@
 #include <map>
 #include <cmath>
 #include <climits>
+#include <algorithm>
+
 
 bool INTER = true;
 //перегруженны оператор вывода вектора в поток
@@ -54,8 +56,8 @@ std::vector< std::pair<std::string, int >> toFlows(std::string text, const int u
     std::vector< std::pair<std::string, int >> tmp;
     int step = maxFlow / uFlow;
     int ind = 0;
-    int freeSize = text.length() - ( step * uFlow + text.length() - maxFlow );
-    
+    int freeSize = text.length() - (step * uFlow + text.length() - maxFlow);
+
     for (int i = 0; i < uFlow; i++) {
         int len;
         if (uFlow - i == 1) {
@@ -77,6 +79,15 @@ std::vector< std::pair<std::string, int >> toFlows(std::string text, const int u
 
     return tmp;
 }
+
+
+//функция для сортировки по возрастанию
+int comp1(const void* a, const void* b)
+{
+    return (*(int*)a - *(int*)b);
+}
+
+
 //функция определения сдвига
 bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix) {
     int k = 0;   //индекс сравниваемого символа в sample
@@ -98,11 +109,11 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         for (int j = 0; j < flows.size(); j++) {
-            std::cout <<  "\nПоиск образа в потокe: " << flows[j].first << ";\n";
+            std::cout << "\nПоиск образа в потокe: " << flows[j].first << ":\n\n";
             for (int i = 0; i < flows[j].first.length(); i++) {
                 while (k > 0 && sample[k] != flows[j].first[i])
                     k = prefix[k - 1];
-
+                std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t";
                 if (sample[k] == flows[j].first[i]) {
                     std::cout << "\ttext[" << i << "] == sample[" << k << "]\n";
                     k = k + 1;
@@ -119,7 +130,15 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                 }
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
-                    result.push_back(flows[j].second + i - sample.length() + 1);
+                    bool flag1 = true;
+                    for (int t = 0; t < result.size(); t++) {
+                        if (result[t] == flows[j].second + i - sample.length() + 1) {
+                            flag1 = false;
+                            break;
+                        }
+                    }
+
+                    if(flag1) result.push_back(flows[j].second + i - sample.length() + 1);
                     flag = true;
                 }
 
@@ -127,17 +146,18 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
         }
         if (!flag) std::cout << "\nНет образовм: " << -1;
         if (flag) {
-        std::cout << "\nResult: ";
-        for (int i = 0; i < result.size(); i++) {
-            if (i > 0) std::cout << ", ";
-            std::cout << result[i];
+            std::sort(result.begin(), result.end());
+            std::cout << "\nResult: ";
+            for (int i = 0; i < result.size(); i++) {
+                if (i > 0) std::cout << ", ";
+                std::cout << result[i];
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
-    }
         return flag;
 
     }
-    
+
 }
 
 
