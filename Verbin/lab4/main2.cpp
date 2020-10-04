@@ -104,6 +104,7 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
         std::cout << std::endl;
         for (int j = 0; j < flows.size(); j++) {
+            k = 0;
             std::cout << "\nПоиск циклического сдвига в потокe: " << flows[j].first << ";\n" << std::endl;
             for (int i = 0; i < flows[j].first.length(); i++) {
                 while (k > 0 && sample[k] != flows[j].first[i]) {
