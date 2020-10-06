@@ -1,0 +1,10 @@
+https://www.onlinegdb.com/online_c++_compiler
+-ссылка на онлайн компилятор
+
+Тесты для main1.cpp:
+aaaaaaaaaaaa aaaaaaaaaaaa
+Aaa aaaa
+
+Тесты для main2.cpp:
+ab abab 1
+a ababfaabfaaabaafhaaa 5
