@@ -108,30 +108,45 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     }
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
+        bool flag3 = false;
         for (int j = 0; j < flows.size(); j++) {
             k = 0;
             std::cout << "\nПоиск образа в потокe: " << flows[j].first << ":\n\n";
             for (int i = 0; i < flows[j].first.length(); i++) {
-                while (k > 0 && sample[k] != flows[j].first[i])
+ 
+                if(sample[k] != flows[j].first[i]){
+                    if (!flag3)std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t" << "  text[" << i << "] != sample[" << k << "] textIndex++";
+                    else flag3 = false;
+                    if (k > 0) std::cout << "\n\n\tStart Backtraking:\n\n";
+                    else std::cout << ", Still paternIndex to 0;\n";
+                }
+                while (k > 0 && sample[k] != flows[j].first[i]) {             
                     k = prefix[k - 1];
+                    std::cout << "\t\tBackTracking paternIndex: pi[paternIndex - 1] == " << k << std::endl;
+                    if (k == 0) {
+                        std::cout << "\t\tStill paternIndex to 0;\n";
+                    }
+                    flag3 = true;
+                }
+                if (flag3) {
+                    std::cout << std::endl;
+                    flag3 = false;
+                }
                 std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t";
                 if (sample[k] == flows[j].first[i]) {
-                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\tk = k++\n";
+                    std::cout << "  text[" << i << "] == sample[" << k << "] paternIndex++, textIndex++;\n";
                     k = k + 1;
                 }
                 else {
-                    std::cout << "\ttext[" << i << "] != sample[" << k << "]\tk = prefics[k-1]";
-                    if (k != 0) {
-                        std::cout << "; k = " << prefix[k - 1] << std::endl;
-                        //     k = prefix[k - 1];
-                    }
-                    else {
-                        std::cout << std::endl;
-                    }
+                    std::cout << "  text[" << i << "] != sample[" << k << "] textIndex++";
+                    if(k > 0) std::cout << "\n\n\tStart Backtraking:\n";
+                    else std::cout << ", Still paternIndex to 0;\n";
+
                 }
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден образ! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
                     bool flag1 = true;
+                    flag3 = true;
                     for (int t = 0; t < result.size(); t++) {
                         if (result[t] == flows[j].second + i - sample.length() + 1) {
                             flag1 = false;
