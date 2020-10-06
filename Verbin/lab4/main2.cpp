@@ -102,33 +102,45 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
     }
     else {
         std::vector< std::pair<std::string, int >> flows = toFlows(text, uFlow, maxFlow);
-        std::cout << std::endl;
+        bool flag3 = false;
         for (int j = 0; j < flows.size(); j++) {
             k = 0;
-            std::cout << "\nПоиск циклического сдвига в потокe: " << flows[j].first << ";\n" << std::endl;
+            std::cout << "\nПоиск образа в потокe: " << flows[j].first << ":\n\n";
             for (int i = 0; i < flows[j].first.length(); i++) {
+
+                if (sample[k] != flows[j].first[i]) {
+                    if (!flag3)std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t" << "  text[" << i << "] != sample[" << k << "] textIndex++";
+                    else flag3 = false;
+                    if (k > 0) std::cout << "\n\n\tStart Backtraking:\n\n";
+                    else std::cout << ", Still paternIndex to 0;\n";
+                }
                 while (k > 0 && sample[k] != flows[j].first[i]) {
                     k = prefix[k - 1];
+                    std::cout << "\t\tBackTracking paternIndex: pi[paternIndex - 1] == " << k << std::endl;
+                    if (k == 0) {
+                        std::cout << "\t\tStill paternIndex to 0;\n";
+                    }
+                    flag3 = true;
+                }
+                if (flag3) {
+                    std::cout << std::endl;
+                    flag3 = false;
                 }
                 std::cout << "Symbols: " << flows[j].first[i] << ", " << sample[k] << "\t";
                 if (sample[k] == flows[j].first[i]) {
-                    std::cout << "\ttext[" << i << "] == sample[" << k << "]\tk = k++\n";
+                    std::cout << "  text[" << i << "] == sample[" << k << "] paternIndex++, textIndex++;\n";
                     k = k + 1;
                 }
                 else {
-                    std::cout << "\ttext[" << i << "] != sample[" << k << "]\tk = prefics[k-1]";
-                    if (k != 0) {
-                        std::cout << "; k = " << prefix[k - 1] << std::endl;
-                        //     k = prefix[k - 1];
-                    }
-                    else {
-                        std::cout << std::endl;
-                    }
-                }
+                    std::cout << "  text[" << i << "] != sample[" << k << "] textIndex++";
+                    if (k > 0) std::cout << "\n\n\tStart Backtraking:\n";
+                    else std::cout << ", Still paternIndex to 0;\n";
 
+                }
                 if (k == sample.length()) {
                     std::cout << "\n\tНайден циклический сдвиг! позиция: " << flows[j].second + i - sample.length() + 1 << "\n\n";
                     bool flag1 = true;
+                    flag3 = true;
                     for (int t = 0; t < result.size(); t++) {
                         if (result[t] == flows[j].second + i - sample.length() + 1) {
                             flag1 = false;
@@ -136,39 +148,35 @@ bool findEntry(std::string& text, std::string& sample, std::vector<int>& prefix)
                         }
                     }
 
-                    if(flag1) result.push_back(flows[j].second + i - sample.length() + 1);
+                    if (flag1) result.push_back(flows[j].second + i - sample.length() + 1);
                     flag = true;
                 }
+            }
 
             }
         }
-        if (!flag) {
-            std::cout << "\nНе является циклическим сдвигом: ";
-            std::cout << "-1";
+        if (!flag) std::cout << "\nНе является циклическим сдвигом: ";
+        if (flag) {
+            std::cout << "\nResult: ";
+            std::sort(result.begin(), result.end());
+            for (int i = 0; i < result.size(); i++) {
+                if (i > 0) std::cout << ", ";
+                std::cout << result[i];
+            }
+            std::cout << std::endl;
         }
-
+        return flag;
     }
-    if (flag) {
-        std::cout << "\nResult: ";
-        std::sort(result.begin(), result.end());
-        for (int i = 0; i < result.size(); i++) {
-            if (i > 0) std::cout << ", ";
-            std::cout << result[i];
-        }
-        std::cout << std::endl;
+
+
+    int main()
+    {
+        setlocale(LC_ALL, "Russian");
+        std::string text;
+        std::string sample;
+        std::cin >> text; std::cin >> sample;
+        std::vector<int> prefix(sample.length());
+        prefixFunction(sample, prefix);
+        findEntry(text, sample, prefix);
+        return 0;
     }
-    return flag;
-}
-
-
-int main()
-{
-    setlocale(LC_ALL, "Russian");
-    std::string text;
-    std::string sample;
-    std::cin >> text; std::cin >> sample;
-    std::vector<int> prefix(sample.length());
-    prefixFunction(sample, prefix);
-    findEntry(text, sample, prefix);
-    return 0;
-}
