@@ -1,427 +1,282 @@
 #include <iostream>
-#include <algorithm>
 #include <vector>
+#include <time.h>
 
+//#define DEBUG
+int add_count = 0;
+int del_count = 0;
+int rel_count = 0;
+int com_count = 0;
 
-struct SquareList
+using namespace std;
+
+struct Square
 {
-    int count = 0;
-    int* arr;
-};
-
-struct Coord		// координаты на столешнице
-{
-    int x;
     int y;
+    int x;
+    int width;
+    int num;
 };
 
-
-struct SquareData		// информация о квадрате 
+void printField(int** field, int width)
 {
-    Coord pos;  // координаты
-    int w;   // размер квадрата
-
-    friend std::ostream& operator<<(std::ostream& os, const SquareData& sq){
-        setlocale(LC_CTYPE, "rus");
-        os << sq.pos.x + 1 << " " << sq.pos.y + 1 << " " << sq.w << std::endl;
-        return os;
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < width; j++)
+            cout << field[i][j] << " ";
+        cout << endl;
     }
-};
-
-
-class Square
-{
-private:
-    int **iBestConfiguration; // лучшее расположение квадратов на поле
-    int res; // количество квадратов в лучшем расположении
-
-    const int iSize; //размер большого квадрата
-
-    int **iArray; // поле для поиска расположения квадратов
-    int iColors = 0; //количество квадратов на поле
-
-
-    int optimize();
-    void div2();
-    void div3();
-    void div5();
-    SquareData findPotentialSquare() const;
-    SquareData findSquare_(int color, int** Array);
-    void rec_backtrack(int iCurSize);
-    int rec_backtrack(int iCurSize, SquareList* list);
-    void setConfiguration();
-
-
-public:
-    Square(int iSize):			// конструктор класса
-        iSize(iSize)
-    {
-        iBestConfiguration = new int*[iSize];
-        iArray = new int*[iSize];
-        for(int i = 0; i < iSize; i++){
-            iBestConfiguration[i] = new int[iSize];
-            iArray[i] = new int[iSize];
-            for(int j = 0; j < iSize; j++){
-                iBestConfiguration[i][j] = 0;
-                iArray[i][j] = 0;
-            }
-        }
-    }
-
-    void proceed();						
-    int proceed(SquareList* list);
-    int getSize() const;
-    void setSquare(int x, int y, int w);
-    void printConfiguration(std::ostream &os);
-    void delSquare(int x, int y);
-
-    ~Square(){
-        for(int i = 0; i < iSize; i++){
-            delete [] iBestConfiguration[i];
-            delete [] iArray[i];
-        }
-        delete [] iBestConfiguration;
-        delete [] iArray;
-    }
-};
-
-
-
-void Square::proceed(){			// поиск решения, если пользователь не задал квадратов, которые необходимо установить на столешнице
-    if(!optimize()){
-        res = iSize*iSize;
-        rec_backtrack(0);
-        iColors = res;
-    }
+    cout << endl;
 }
 
+void printVector(vector<Square> vector)
+{
+    
+    for (int i = 0; i < vector.size(); ++i)
+        cout  << vector[i].x + 1 << " " << vector[i].y + 1 << " " << vector[i].width  << endl;
+}
 
-int Square::proceed(SquareList* list){  // поиск решения, если пользователь задал квадраты, которые необходимо установить на столешнице
-    int find_flag = 0;
-    if(optimize()){				// проверка, включают ли в себя решения, найденные с помощью оптимизаций, необходимые квадраты
-        for(int j = 0; j<list->count; j++){
-            int flag = 0;
-            for(int i = 1; i <= iColors; i++){
-                auto sq = findSquare_(i, iBestConfiguration);
-                if(list->arr[j] == sq.w){
-                    flag = 1;
-                    find_flag = 1;
-                    break;
+int findSize(int** field, int widthOfField, int y0, int x0)
+{
+    int width;                                                                   //
+    for (width = 2; width < widthOfField + 1; ++width) {                          //
+        for (int y = y0; y < y0 + width; ++y) {                                  //
+            for (int x = x0; x < x0 + width; ++x) {                              //  Нахождение максимальной ширины
+                if (y >= widthOfField || x >= widthOfField || field[y][x] != 0)  //  квадрата, который можно вставить
+                    return width - 1;                                            //  в данной точке
+            }                                                                    //
+        }                                                                        //
+    }                                                                            //
+    return width - 1;                                                            //
+}
+
+void drawSquare(int** field, int width, int y0, int x0, int num)
+{
+    for (int y = y0; y < y0 + width; y++)
+        for (int x = x0; x < x0 + width; x++)
+            field[y][x] = num;
+}
+
+void addToVector(vector<Square>& vector, int y, int x, int width, int num)
+{
+    Square square;
+    square.y = y;
+    square.x = x;
+    square.width = width;
+    square.num = num;
+    vector.push_back(square);
+    add_count++;
+}
+
+void even(int width)
+{
+    cout << "Minimal count of Squares: " << 4 << endl;
+    cout << 1 << " Point ( x = " << "1, y = " << "1, width = " << width / 2 << ")" << endl;
+    cout << 2 << " Point ( x = " << "1, y = " << width / 2 + 1 << ", width = " << width / 2 << ")" << endl;
+    cout << 3 << " Point ( x = " << width / 2 + 1 << ", y = " << "1, width = " << width / 2 << ")" << endl;
+    cout << 4 << " Point ( x = " << width / 2 + 1 << ", y = " << width / 2 + 1 << ", width = " << width / 2 << ")" << endl;
+}
+
+void odd3(int width) {
+    cout << "Minimal count of Squares: " << 6 << endl;
+    cout << 1 << " Point ( x = " << "1, y = 1, width = " << 2 * width / 3 << ")" << endl;
+    cout << 2 << " Point ( x = " << "1, y = " << 2 * width / 3 + 1 << ", width = " << width / 3 << ")" << endl;
+    cout << 3 << " Point ( x = " << width / 3 + 1 << ", y = " << 2 * width / 3 + 1 << ", width = " << width / 3 << ")" << endl;
+    cout << 4 << " Point ( x = " << 2 * width / 3 + 1 << ", y = " << 2 * width / 3 + 1 << ", width = " << width / 3 << ")" << endl;
+    cout << 5 << " Point ( x = " << 2 * width / 3 + 1 << ", y = " << width / 3 + 1 << ", width = " << width / 3 << ")" << endl;
+    cout << 6 << " Point ( x = " << 2 * width / 3 + 1 << ", y = " << 1 << ", width = " << width / 3 << ")" << endl;
+}
+
+void odd5(int width) {
+    cout << "Minimal count of Squares: " << 8 << endl;
+    cout << 1 << " Point ( x = " << "1, y = 1, width = " << 3 * width / 5 << ")" << endl;
+    cout << 2 << " Point ( x = " << "1, y = " << 3 * width / 5 + 1 << ", width = " << 2 * width / 5 << ")" << endl;
+    cout << 3 << " Point ( x = " << 2 * width / 5 + 1 << ", y = " << 3 * width / 5 + 1 << ", width = " << 2 * width / 5 << ")" << endl;
+    cout << 4 << " Point ( x = " << 3 * width / 5 + 1 << ", y = 1, width = " << 2 * width / 5 << ")" << endl;
+    cout << 5 << " Point ( x = " << 3 * width / 5 + 1 << ", y = " << 2 * width / 5 + 1 << ", width = " << width / 5 << ")" << endl;
+    cout << 6 << " Point ( x = " << 4 * width / 5 + 1 << ", y = " << 2 * width / 5 + 1 << ", width = " << width / 5 << ")" << endl;
+    cout << 7 << " Point ( x = " << 4 * width / 5 + 1 << ", y = " << 3 * width / 5 + 1 << ", width = " << width / 5 << ")" << endl;
+    cout << 8 << " Point ( x = " << 4 * width / 5 + 1 << ", y = " << 4 * width / 5 + 1 << ", width = " << width / 5 << ")" << endl;
+}
+
+void vectorToBestVector(vector<Square>& bestVector, vector<Square> vector, int widthOfLargerSquare)
+{
+    bestVector[3].width = widthOfLargerSquare;
+    int i;
+    int size = bestVector.size() - 4;
+    for (i = 0; i < size; ++i)
+        bestVector.pop_back();
+    for (i = 0; i < vector.size(); ++i) {
+        addToVector(bestVector, vector[i].y, vector[i].x, vector[i].width, vector[i].num);
+    }
+    rel_count++;
+}
+
+void fill(int width, vector<Square>& bestVector)
+{
+    vector<Square> vector;
+
+    int countOfSquares = 4;
+
+    int newWidth = width / 2 + 1;             //  Ширина квадрата в левом верхнем углу
+
+    int** field = new int* [newWidth];         //
+    for (int y = 0; y < newWidth; ++y)         //  Выделение памяти под двумерный массив
+        field[y] = new int[newWidth];         //
+
+    int startWidth = newWidth / 2 + 1;
+    //  Добавление четырех начальных квадратов
+    addToVector(bestVector, newWidth - 1, newWidth - 1, newWidth, 1);   //   _ _ _  в вектор с лучшей конфигурацией
+    addToVector(bestVector, 0, newWidth, width - newWidth, 2);          //  |_|_|_|
+    addToVector(bestVector, newWidth, 0, width - newWidth, 3);          //  |_|   |
+    addToVector(bestVector, 0, 0, startWidth, 4);                       //  |_|_ _|
+
+    for (int widthOfLargerSquare = startWidth; widthOfLargerSquare >= 1; --widthOfLargerSquare) {
+
+        bool flagToEnd = false;
+
+#ifdef DEBUG
+        cout << "Draw the first square with a width of one less: " << endl << endl;
+#endif
+
+        for (int y = 0; y < newWidth; ++y)                               //
+            for (int x = 0; x < newWidth; ++x) {                         //
+                if (x < widthOfLargerSquare && y < widthOfLargerSquare)  //  В верхний левый угол квадрата
+                    field[y][x] = 1;                                     //  вставляется квадрат с определенной
+                else                                                     //  шириной, остальные клетки зануляются
+                    field[y][x] = 0;                                     //
+            }                                                            //
+
+        field[newWidth - 1][newWidth - 1] = -1;                          //  Крайний нижний угол замощаемого в процессе
+                                                                         //  бэктрэкинга квадрата устанавливается в -1
+
+#ifdef DEBUG
+        printField(field, newWidth);
+        cout << "Square filling: " << endl << endl;
+#endif
+        for (int y = 0, num = 2; y < newWidth && !flagToEnd; ++y)        //  Нулевые клетки замещаются квадратами
+            for (int x = 0; x < newWidth && !flagToEnd; ++x) {           //  максимально возможной ширины, при этом
+                if (field[y][x] == 0) {                                  //  частное решение заносится в вектор
+                    if (vector.size() + 4 >= countOfSquares && widthOfLargerSquare != startWidth) {                    //  Если количество квадратов, необходимых
+                        flagToEnd = true;                                                                             //  в получаемом частном решении, больше количества
+#ifdef DEBUG                                                                                  //  квадратов, получаемых при лучшей конфигурации, поднимается
+                        cout << "Already found a solution with the same or fewer squares!" << endl << endl;       //  флаг для прекращения поиска лучшего решения
+#endif
+                        break;
+                    }
+                    int size = findSize(field, newWidth, y, x);          //
+                    drawSquare(field, size, y, x, num);                  //
+                    addToVector(vector, y, x, size, num);                //
+                    num++;                                               //
+#ifdef DEBUG
+                    printField(field, newWidth);
+#endif
                 }
             }
-            if(flag == 0){
-                res = iSize*iSize;
-                iColors = 0;
-                for(int i = 0; i < iSize; i++){
-                    for(int j = 0; j < iSize; j++){
-                        iBestConfiguration[i][j] = 0;
-                        iArray[i][j] = 0;
+        com_count++;
+        if (countOfSquares == 4 || vector.size() + 4 < countOfSquares) {  //  Если это первая итерация или найденное
+            countOfSquares = vector.size() + 4;                          //  частное решение лучше найденного ранее, то
+            rel_count++;
+            vectorToBestVector(bestVector, vector, widthOfLargerSquare); //  новое решение становится лучшим
+        }
+
+
+        while (1) {
+
+            flagToEnd = false;
+            Square lastSquare;
+#ifdef DEBUG
+            cout << "Decreasing the width of the square per unit: " << endl << endl;
+#endif
+            for (int i = vector.size(); i != 0; --i) {                   //  Начиная с конца вектора, содержащего
+                lastSquare = vector[vector.size() - 1];                  //  последнее частное решение, ищем первый
+                if (lastSquare.width == 1) {                             //  квадрат ширины, большей 1, попутно обнуляя
+                    field[lastSquare.y][lastSquare.x] = 0;               //  квадраты с шириной 1
+                    vector.pop_back();                                   //
+                    del_count++;
+#ifdef DEBUG
+                    printField(field, newWidth);
+#endif
+                }
+                else {
+#ifdef DEBUG
+                    cout << "Reducing the width of the last from the end of the square with a width greater than one: " << endl << endl;
+#endif
+                    for (int y = lastSquare.y; y < lastSquare.y + lastSquare.width; ++y) {                                 //
+                        for (int x = lastSquare.x; x < lastSquare.x + lastSquare.width; ++x) {                             //
+                            if (y >= lastSquare.y + lastSquare.width - 1 || x >= lastSquare.x + lastSquare.width - 1)    //
+                                field[y][x] = 0;                                                                        //  Если ширина очередного квадрата
+                        }                                                                                               //  в векторе больше 1, то она
+                    }                                                                                                   //  уменьшается на 1 и даннный цикл
+                    vector[vector.size() - 1].width = lastSquare.width - 1;                                             //  завершает работу
+#ifdef DEBUG                                                                                        //
+                    printField(field, newWidth);                                                                    //
+#endif                                                                                              //
+                    break;                                                                                              //
+                }                                                                                                       //
+            }                                                                                                           //
+                                                                         //  Если на предыдущем шаге были обнулены все
+            if (vector.empty())                                           //  квадраты ширины 1, то цикл while завершает
+                break;                                                   //  поиск оптимальных конфигураций при данной
+                                                                         //  ширине квадрата в левом верхнем углу
+#ifdef DEBUG
+            cout << "Square filling: " << endl << endl;
+#endif
+
+            for (int y = 0, num = lastSquare.num + 1; y < newWidth && !flagToEnd; ++y)  //  Нулевые клетки замещаются квадратами
+                for (int x = 0; x < newWidth && !flagToEnd; ++x) {                      //  максимально возможной ширины, при этом
+                    if (field[y][x] == 0) {                                             //  частное решение заносится в вектор
+                        if (vector.size() + 4 >= countOfSquares) {                                                  //  Если количество квадратов, необходимых
+                            flagToEnd = true;                                                                      //  в получаемом частном решении, больше количества
+#ifdef DEBUG                                                                           //  квадратов, получаемых при лучшей конфигурации, поднимается
+                            cout << "Already found a solution with the same or fewer squares!" << endl << endl;//  флаг для прекращения поиска лучшего решения
+#endif
+                            break;
+                        }
+                        int size = findSize(field, newWidth, y, x);                     //
+                        drawSquare(field, size, y, x, num);                             //
+                        addToVector(vector, y, x, size, num);                           //
+                        num++;                                                          //
+#ifdef DEBUG
+                        printField(field, newWidth);
+#endif
                     }
                 }
-                find_flag = rec_backtrack(0, list);
-                return find_flag;
-            }
+            com_count++;
+            if (vector.size() + 4 < countOfSquares) {                                //  Если найденное частное решение лучше
+                countOfSquares = vector.size() + 4;                                //  найденного ранее, то новое решение
+                vectorToBestVector(bestVector, vector, widthOfLargerSquare);       //  становится лучшим
+            }                                                                      //
         }
+        vector.clear();                       //  Очищается вектор частных решений
     }
-    else{
-        find_flag = rec_backtrack(0, list);
-    }
-    return find_flag;
-}
-
-//_____________OPTIMIZE____________________________________________
-
-int Square::optimize(){				// выбор оптимизации
-    if (iSize % 2 == 0){
-        div2();
-        setConfiguration();
-        return 1;
-    }
-    else if (iSize % 3 == 0){
-        div3();
-        setConfiguration();
-        return 1;
-    }
-    else if (iSize % 5 == 0){
-        div5();
-        setConfiguration();
-        return 1;
-    }
-    return 0;
-}
-
-void Square::div2(){					// оптимизация для столешниц с четной стороной	
-    setSquare(0, 0, iSize/2);
-    setSquare(iSize/2, 0, iSize/2);
-    setSquare(0, iSize/2, iSize/2);
-    setSquare(iSize/2, iSize/2, iSize/2);
-}
-
-void Square::div3(){					// оптимизация для столешниц со стороной кратной трём
-    setSquare(0, 0, iSize/3*2);
-    setSquare(iSize/3*2, 0, iSize/3);
-    setSquare(iSize/3*2, iSize/3, iSize/3);
-    setSquare(0, iSize/3*2, iSize/3);
-    setSquare(iSize/3, iSize/3*2, iSize/3);
-    setSquare(iSize/3*2, iSize/3*2, iSize/3);
-}
-
-void Square::div5(){					// оптимизация для столешниц со стороной кратной пяти
-    setSquare(0, 0, iSize/5*3);
-    setSquare(iSize/5*3, 0, iSize/5*2);
-    setSquare(iSize/5*3, iSize/5*2, iSize/5*2);
-    setSquare(0, iSize/5*3, iSize/5*2);
-    setSquare(iSize/5*2, iSize/5*3, iSize/5);
-    setSquare(iSize/5*2, iSize/5*4, iSize/5);
-    setSquare(iSize/5*3, iSize/5*4, iSize/5);
-    setSquare(iSize/5*4, iSize/5*4, iSize/5);
-}
-
-//___________________________________________________________________________________________
-
-SquareData Square::findPotentialSquare() const{ //поск свободного места для квадратика на поле, возвращает позицию и размер
-    int x = -1;
-    int y = -1;
-    for(int i = 0; i < iSize; i++){
-        bool b = 0; 							// флаг для выхода из цикла
-        for(int j = 0; j < iSize; j++){
-            if(iArray[i][j] == 0){
-                y = i;
-                x = j;
-                b = 1;
-                break;
-            }
-        }
-        if(b) break;
-    }
-    if(x == -1 && y == -1){
-        return SquareData{Coord{0, 0}, 0};
-    }
-    int s;
-    for(s = 0; s <= iSize - std::max(x, y); s++){
-        bool b = 0; 							// флаг для выхода из цикла
-        for(int i = y; i < y+s; i++){
-            if(iArray[i][x+s-1] != 0){
-                b = 1;
-                break;
-            }
-        }
-        for(int i = x; i < x+s; i++){
-            if(iArray[y+s-1][i] != 0){
-                b = 1;
-                break;
-            }
-        }
-        if(b) break;
-    }
-    s--;
-    return SquareData{Coord{x, y}, s}; 			// максимально возможный для вмещения квадрат
-}
-
-
-SquareData Square::findSquare_(int color, int** Array){
-    int x = -1;
-    int y = -1;
-    for(int i = 0; i < iSize; i++){ //находим верхний левый угол с заданным цветом
-        bool b = 0;
-        for(int j = 0; j < iSize; j++){
-            if(Array[i][j] == color){
-                y = i;
-                x = j;
-                b = 1;
-                break;
-            }
-        }
-        if(b) break;
-    }
-    if(x == -1 && y == -1)
-        return SquareData{Coord{0, 0}, 0};
-    int s;
-    for(s = x; s < iSize; s++){  // находим размер квадрата
-        if(Array[y][s] != color)
-            break;
-    }
-    s -= x;
-    return SquareData{Coord{x, y}, s};
-}
-
-void Square::rec_backtrack(int iCurSize){
-    if(iCurSize >= res)  // если количество уже найденных квадратов больше чем
-                        // лучшая конфигурация =>
-        return;
-    auto emptySquare = findPotentialSquare();
-    if(emptySquare.w == iSize){
-        setSquare(0, 0, iSize/2+1);
-        setSquare(0, iSize/2+1, iSize/2);
-        setSquare(iSize/2+1, 0, iSize/2);
-        rec_backtrack(3);
-        return;
-    }
-    if(emptySquare.w == 0){   // ура!, мы нашли какую-то конфигурацию
-        if(iCurSize < res){
-            res = iCurSize;
-            setConfiguration();
-        }
-    }
-    else{
-        int w = emptySquare.w;
-        while(w > 0){
-            setSquare(emptySquare.pos.x, emptySquare.pos.y, w);  // записываем цифры в найденный квадрат
-            rec_backtrack(iCurSize+1);
-            delSquare(emptySquare.pos.x, emptySquare.pos.y); // удаляем квадрат текущего этапа рекурсии
-            w--; // уменьшаем размер вставляемого квадрата
-        }
-    }
-}
-
-int Square::rec_backtrack(int iCurSize, SquareList* list){
-    int find_flag = 0;
-    if(iCurSize >= res)  // если количество уже найденных квадратов больше чем
-                        // лучшая конфигурация =>
-        return find_flag;
-    auto emptySquare = findPotentialSquare();
-    if(emptySquare.w == 0){   // ура!, мы нашли какую-то конфигурацию
-        //проверка подходит ли нам эта конфигурация
-        bool f = true;
-        for(int j = 0; j<list->count; j++){
-            int flag = 0;
-            for(int i = 1; i <= iColors; i++){
-                auto sq = findSquare_(i, iArray);
-                if(list->arr[j] == sq.w){
-                    flag = 1;
-                    break;
-                }
-            }
-            if(flag == 0){
-                f = false;
-                return find_flag;
-            }
-        }
-        if(iCurSize < res && f == true){
-            res = iCurSize;
-            setConfiguration();
-            find_flag = 1;
-        }
-    }
-    else{
-        int w = emptySquare.w;
-        while(w > 0){
-            setSquare(emptySquare.pos.x, emptySquare.pos.y, w);  // записываем цифры в найденный квадрат
-            find_flag = rec_backtrack(iCurSize+1, list); 		// флаг показывает, что удалось найти хоть один вариант подходящего распложения квадратов
-            if(find_flag == 1)
-                return find_flag;
-            delSquare(emptySquare.pos.x, emptySquare.pos.y); // удаляем квадрат текущего этапа рекурсии
-            w--; // уменьшаем размер вставляемого квадрата
-        }
-    }
-    return find_flag;
+    cout << countOfSquares << endl;
 }
 
 
 
-int Square::getSize() const {
-    return iSize;
+int main() {
+    int width;
+    int count;
+    vector<Square> bestVector;
+    cout << "Enter width of square :";
+    cin >> width;
+
+        if (!(width % 2) )
+            even(width);
+        else if (!(width % 3))
+            odd3(width);
+        else if (!(width % 5))
+            odd5(width);
+        else {
+            fill(width, bestVector);
+            printVector(bestVector);
+        }
+        
+        cout <<"Adding count:\t" <<  add_count << endl;
+        cout <<"Delete count:\t" << del_count << endl;
+        cout <<"Compare count:\t" << com_count << endl;
+        cout << "Reload count:\t" << rel_count << endl;
+        cout <<"Count:\t\t" << del_count + add_count + com_count + rel_count << endl;
+
+ 
 }
-
-void Square::setSquare(int x, int y, int w){			// запись квадрата в массив для поиска лучшего расположения
-    for(int i = y; i < y + w && i < iSize; i++){
-        for(int j = x; j < x + w && j < iSize; j++){
-            iArray[i][j] = iColors+1;
-        }
-    }
-    iColors++;
-}
-
-void Square::setConfiguration(){  //записываем нынешний вариант, как лучший
-    for(int i = 0; i < iSize; i++){
-        for(int j = 0; j < iSize; j++){
-            iBestConfiguration[i][j] = iArray[i][j];
-        }
-    }
-//    std::cout << "Вариант лучшего расположения квадратов:" << std::endl;       // вывод частичных решений
-//    printConfiguration(std::cout);                                             // вывод частичных решений
-}
-
-
-void Square::printConfiguration(std::ostream &os){ 			// вовод лучшего расположения на экран
-    os << iColors << std::endl;
-    for(int i = 1; i <= iColors; i++){
-        auto sq = findSquare_(i, iBestConfiguration);
-        os << sq;
-    }
-}
-
-void Square::delSquare(int x, int y){ 			// удаление квадрата со столешницы
-    int color = iArray[y][x];					// определение цвета квадрата, который необходимо удалить со столешницы
-    for(int i = y; i < iSize; i++){
-        for(int j = x; j < iSize; j++){
-            if(iArray[i][j] == color)
-                iArray[i][j] = 0;
-            else break;
-        }
-    }
-    for(int i = 0; i < iSize; i++){				// уменьшение номера цвета, если он больше  удалённого
-        for(int j = 0; j < iSize; j++){
-            if(iArray[i][j] > color)
-                iArray[i][j]--;
-        }
-    }
-    iColors--;
-}
-
-
-
-void read_sizes(int size, SquareList *list){   		// чтение квадратов, которые пользователь хочет разместить на доске
-    setlocale(LC_CTYPE, "rus");
-    std::cout << "Введите количество квадратов, которые необходимо разместить:" << std::endl;
-    std::cin >> list->count;
-    if(list->count <= 0)
-        return;
-    std::cout << "Введите размеры квадратов, которые необходимо разместить:" << std::endl;
-    list->arr = new int[list->count];
-    for(int i = 0; i<list->count; i++){
-        std::cin >> list->arr[i];
-        if(list->arr[i]>size){
-            list->count = -1;
-            return;
-        }
-        if(list->arr[i]==size){
-            list->count = -1;
-            return;
-        }
-    }
-}
-
-int main(){
-    setlocale(LC_CTYPE, "rus");
-    int size, flag;
-    SquareList *list = new SquareList;
-    std::cout << "Введите размер столешницы:" << std::endl;
-    std::cin >> size;
-    read_sizes(size, list);
-    if(list->count < 0){
-        std::cout << "Невозможно заполнить столешницу заданными квадратами!" << std::endl;
-        return 0;
-    }
-    else if(list->count == 0){
-        if(size == 0 || size == 1)
-            std::cout << 0 << std::endl;
-        else{
-            Square square(size);
-            square.proceed();
-            std::cout << "Решение:" << std::endl;
-            square.printConfiguration(std::cout);
-        }
-    }
-    else{
-        Square square(size);
-        flag = square.proceed(list);
-        if(flag == 1){
-            std::cout << "Решение:" << std::endl;
-            square.printConfiguration(std::cout);
-        }
-        else
-            std::cout << "Невозможно заполнить столешницу заданными квадратами!" << std::endl;
-    }
-    return 0;
-} 
